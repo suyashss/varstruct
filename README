@@ -1,0 +1,51 @@
+mStruct is a software for population genetic analysis of microsatellite data. It is similar to the Structure program by Pritchard et al.
+
+You can compile mStruct from source by using the provided makefile, by executing the command "make"
+
+Usage instructions:
+
+usage: ./mstruct <data-file> <output dir> <number of pops> <random seed> <other-params-file>
+
+<data-file> is a file containing the genotype data. Its format is as follows:
+===========================================================================
+First line- N (Number of individuals)
+Second line- M (Number of loci per individual)
+Third line- P (Ploidy of individuals)
+Followed by P lines per individual, each line containing M entries separated by spaces.
+===========================================================================
+The data file has (3+N*P) lines in total.
+
+<output dir> is the directory in which the output files are stored. This directory must be present for the output to be saved.
+
+<number of pops> is the number of ancestral populations that you want to infer from the data.
+
+<random seed> is the random seed that is used to randomly initialize the inference.
+
+<other-params-file> is the file containing other parameters to the mStruct program. As of now, the only other parameter that is read is the prior for the pseudocount on the mutation parameter. Its syntax is the same as the example "settings.txt" file.
+
+Output:
+Every few iterations, the program outputs the value of the inferred variational parameters as well as the model parameters (as described in the paper). They are stored in the files with the following suffixes:
+
+.gamma - The variational \gamma parameters. The parameters for each individual are stored on a single line.
+
+.theta - The inferred \theta parameters.
+
+.beta - The ancestral allele frequency matrix.
+
+.rhos - The variational \rho parameters.
+
+.xis - The variational \xi parameters.
+
+.centroids - The allele centroids \mu.
+
+.deltas - The mutation parameters \delta.
+
+.general - The first line stores the number of populations K, the number of loci M, and the ploidy of the data P.
+This is followed by M lines. Each lines contains a single number describing how many ancestral loci are present at that loci.
+
+Other notes:
+1) To obtain the best model (for a given number of populations), run the program multiple times with different values for the random seed.
+
+2) The weight of the pseudocount prior has an important effect on the inference process. The method can at times run into local maxima, where most inferred ancestral populations have a small value for the mutation parameter (around 0.01 usually), and one population has a significantly high mutation parameters. In such situations, the population with high mutation parameter is only accounting for noise.
+
+
