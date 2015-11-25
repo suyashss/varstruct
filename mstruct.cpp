@@ -15,14 +15,11 @@ model* initialise_model(int*** data,int nloci,int npops,int ploidy,int ninds){
   //	INIT centroid arrays
   m->numcentroids=new int[nloci];
   m->centroids=new int*[nloci];
-  m->mutationrate=new double*[nloci];
   m->allelefreq=new double**[nloci];
   for(int i=0;i<nloci;i++){
-    m->mutationrate[i]=new double[npops];
     m->centroids[i]=new int[MAX_CENTROIDS];
     m->allelefreq[i]=new double*[npops];
     for(int j=0;j<npops;j++){
-      m->mutationrate[i][j]=logit(0.2);
       m->allelefreq[i][j]=new double[MAX_CENTROIDS];
     }
   }
@@ -537,15 +534,7 @@ double log1p(double x){
 double computelogf(int x,int mu,double delta){
   if(x<-1)
     return -1000;
-  double ans=0;
-  // cout<<"Here delta was "<<delta<<endl;
-  double logdelta=-1*log1p(exp(0-delta));
-  double logoneminusdelta=-1*log1p(exp(delta));
-  double truedelta=sigmoid(delta);
-  ans=logdelta*abs(x-mu)+logoneminusdelta-log1p(truedelta-pow(truedelta,mu));
-  if(isnan(ans)){
-    cout<<"Computing logf problem: x="<<x<<",mu="<<mu<<",delta="<<delta<<endl;
-  }
+  double ans=(x==mu ? 0 :-1000);
   return ans;
 }
 

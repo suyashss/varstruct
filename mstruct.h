@@ -15,7 +15,6 @@ int PRINTCT=0,SATPRINTCT=0;
 #define DEBUG 1
 //#define DEBUG_0 1
 int MAXALLELES=50;
-double pseudostrength;
 
 struct datamatrix{
   int*** data;
@@ -27,7 +26,6 @@ struct model{
   int** centroids;
   int* numcentroids;
   double* alpha;
-  double** mutationrate;
   double*** allelefreq;
   map<int,int>* uniqalleles; //stores unique alleles at each locus to reduce computation
 };
@@ -53,7 +51,7 @@ model* initialise_model(int*** data,int nloci,int npops,int ploidy,int ninds);
 void putinitialvalues(model* m,int*** data,int ninds);
 void infermodel(model* m,int*** data,int ininds,double**** varc,double**** varz,double** vartheta);
 void updatemodel(model* m,int*** data,int ninds,double**** varc,double**** varz,double** vartheta);
-double computelogf(int x, int mu, double delta);
+double computelogf(int x, int mu);
 void updateparams(model* m,satellite* info);
 void learnmodel(string filename,int npops);
 
