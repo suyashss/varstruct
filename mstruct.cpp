@@ -70,18 +70,18 @@ void putinitialvalues(model* m,int*** data,int ninds){
     for(int j=0;j<ninds*m->ploidy;j++){
       thislocus[j]=data[j%ninds][i][j/ninds];
       if(thislocus[j]>=0){
-	if(m->uniqalleles[i].find(thislocus[j])==m->uniqalleles[i].end())
-	  m->uniqalleles[i][thislocus[j]]=allelecount++; //added new unique allele to list for locus i
+	if(m->uniqalleles[i].find(thislocus[j])==m->uniqalleles[i].end()){
+		m->uniqalleles[i][thislocus[j]]=allelecount; //added new unique allele to list for locus i
+		m->centroids[i][allelecount]=thislocus[j];
+		for(int k=0;k<m->npops;k++)
+			m->allelefreq[i][k][allelecount]=log(zeroonerand());
+		allelecount++;
+	}
 	data[j%ninds][i][j/ninds]=m->uniqalleles[i][thislocus[j]]; // Replace allele with an index into the map
       }
     }
     bestncentroids=allelecount;
     m->numcentroids[i]=bestncentroids;
-    for(int pt=0;pt<bestncentroids;pt++){
-      m->centroids[i][pt]=(m->uniqalleles[i].find(pt))->first;
-      for(int k=0;k<m->npops;k++)
-	m->allelefreq[i][k][pt]=log(zeroonerand());
-    }
     for(int k=0;k<m->npops;k++){
       double logsum=-100;
       for(int l=0;l<bestncentroids;l++){

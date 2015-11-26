@@ -34,8 +34,6 @@ Every few iterations, the program outputs the value of the inferred variational 
 
 .rhos - The variational \rho parameters.
 
-.xis - The variational \xi parameters.
-
 .centroids - The allele centroids \mu.
 
 .general - The first line stores the number of populations K, the number of loci M, and the ploidy of the data P.
