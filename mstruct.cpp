@@ -120,205 +120,29 @@ void putinitialvalues(model* m,int*** data,int ninds){
   int itercount;
   int* thislocus=new int[ninds*m->ploidy];
   int max,min,ncentroids;
-  int* centroidset;
-  double* probsum;
-  double* deltaset;
-  double* pis;
-  double** contribs;
-  double ll,bic;
-  double bestbic;
-  int bestk,bestd;
   int bestncentroids;
-  int* bestcentroids;
-  set<int> thish;
-  set<int>::iterator iteratorh;
   int allelecount=0;
   for(int i=0;i<m->nloci;i++){
-    thish.clear();
-    bestbic=1e30;
-    bestncentroids=1;
-    bestcentroids=new int[1];
     m->uniqalleles[i] =map<int,int>(); // inited allele unique map for this locus
 #ifdef DEBUG_0
     cout<<"Doing locus "<<i<<endl;
 #endif
-    max=INT_MIN;
-    min=INT_MAX;
-    //		Put locus data into an array. Keep track of max and min
+    //		Put locus data into an array.
     allelecount=0;
     for(int j=0;j<ninds*m->ploidy;j++){
       thislocus[j]=data[j%ninds][i][j/ninds];
       if(thislocus[j]>=0){
 	if(m->uniqalleles[i].find(thislocus[j])==m->uniqalleles[i].end())
 	  m->uniqalleles[i][thislocus[j]]=allelecount++; //added new unique allele to list for locus i
-	thish.insert(thislocus[j]);
-	if(thislocus[j]>max)
-	  max=thislocus[j];
-	else if(thislocus[j]<min)
-	  min=thislocus[j];
+	data[j%ninds][i][j/ninds]=m->uniqalleles[i][thislocus[j]]; // Replace allele with an index into the map
       }
     }
-#ifdef DEBUG_2
-    cout<<"Found min "<<min<<" and max "<<max<<", now find best no\n";
-    for(iteratorh=thish.begin();iteratorh!=thish.end();iteratorh++)
-      cout<<*iteratorh<<" ";
-    cout<<endl;
-#endif
-    //		Now have max and min for this locus, now choose best number of centroids here
-    int mostncentroids=(MAX_CENTROIDS>thish.size()?thish.size():MAX_CENTROIDS);
-    for(ncentroids=2;ncentroids<=mostncentroids;ncentroids++){
-#ifdef DEBUG_2
-      cout<<"Trying for centroids= "<<ncentroids<<endl;
-#endif
-      //centroidset=new int[ncentroids];
-      deltaset=new double[ncentroids];
-      centroidset=runkm(ncentroids,thislocus,ninds*m->ploidy);
-      sort(centroidset,centroidset+ncentroids);
-      for(int j=1;j<ncentroids-1;j++){
-	if(centroidset[j]==centroidset[j-1])
-		centroidset[j]=(int)(0.5*(centroidset[j-1]+centroidset[j+1]));	
-	//centroidset[j]=(int)(min+j*1.0*(max-min)/(ncentroids-1));
-#ifdef DEBUG_2
-	cout<<centroidset[j]<<" ";
-#endif
-	deltaset[j]=0.1;
-      }
-#ifdef DEBUG_2
-      cout<<endl;
-#endif
-      contribs=new double*[ninds*m->ploidy];
-      probsum=new double[ninds*m->ploidy];
-      pis=new double[ncentroids];
-      for(int j=0;j<ninds*m->ploidy;j++){
-	contribs[j]=new double[ncentroids];
-	if(thislocus[j]<=0)
-	  continue;
-	bestk=rand()%ncentroids;
-	/*bestk=-1;bestd=INT_MAX;
-	  for(int k=0;k<ncentroids;k++){
-	    if(abs(thislocus[j]-centroidset[k])<bestd){
-	      bestd=abs(thislocus[j]-centroidset[k]);
-	      bestk=k;
-	  }
-	  }*/
-#ifdef DEBUG_2_2
-	cout<<"For j= "<<thislocus[j]<<" bestk= "<<bestk<<endl;
-#endif
-	//cout<<"^^^^ "<<ncentroids<<" ^^^^\n";
-	for(int k=0;k<ncentroids;k++){
-	  pis[k]=1./ncentroids;
-	  //cout<<"&&&&& "<<pis[k]<<endl;
-	  /*if(k==bestk)
-	    contribs[j][k]=0;
-	  else
-	  contribs[j][k]=-100;*/
-	  contribs[j][k]=-1*log(ncentroids);
-	}
-	probsum[j]=0;
-      }
-      itercount=0;
-      double grad,ngrad,scale,newval,newcontrib,delnum,delden;
-      int oldval,muiter,deliter;
-      int tostop=-1;
-      while(itercount++<10){
-	for(int k=0;k<ncentroids;k++){
-	  delnum=1,delden=10;
-	  for(int j=0;j<ninds*m->ploidy;j++){
-	    if(thislocus[j]<0)
-	      continue;
-	    double tempterm=exp(contribs[j][k]-probsum[j]);
-	    
-	    if(tempterm>1){
-	      cout<<"Update term is "<<tempterm<<endl;
-	      cout<<"Data "<<contribs[j][k]<<" "<<probsum[j]<<"**"<<pis[k]<<endl;
-	    }
-	    delnum+=(exp(contribs[j][k]-probsum[j])*abs(thislocus[j]-centroidset[k]));
-	    delden+=(exp(contribs[j][k]-probsum[j])*(2+abs(thislocus[j]-centroidset[k])));
-	  }
-	  //cout<<"Num was "<<delnum<<" and den was "<<delden<<endl;
-	  deltaset[k]=delnum/delden;
-	  if(deltaset[k]<0.2)
-		deltaset[k]=0.2;
-	}
-	//update pi now
-	for(int k=0;k<ncentroids;k++){
-	  for(int j=0;j<ninds*m->ploidy;j++){
-	    if(thislocus[j]<0)
-	      continue;
-	    pis[k]+=exp(contribs[j][k]-probsum[j]);
-	  }
-	  pis[k]/=(ninds*m->ploidy);
-	}
-#ifdef DEBUG_2_2
-	cout<<" For centroid-num= "<<k<<" updated to "<<centroidset[k]<<" and "<<deltaset[k]<<endl;
-	cout<<"Vals were "<<centroid_update_num<<" "<<delta_update_num<<" "<<update_den<<endl;
-#endif
-	
-	for(int j=0;j<ninds*m->ploidy;j++){
-	  probsum[j]=-1000;
-	  if(thislocus[j]<0)
-	    continue;
-	  for(int k=0;k<ncentroids;k++){
-	    //contribs[j][k]=-0.5*log(2*3.14)-log(deltaset[k])-0.5*pow((thislocus[j]-centroidset[k])/deltaset[k],2);
-	    contribs[j][k]=log1p(pis[k]-1)+(abs(thislocus[j]-centroidset[k])*log(deltaset[k])+log(1-deltaset[k])-log(1+deltaset[k]-pow(deltaset[k],1.0*centroidset[k])));
-	    if(isnan(contribs[j][k])){
-	      cout<<"Found a nan in the contribs\n";
-	      contribs[j][k]=-1000;
-	    }
-#ifdef DEBUG_2_2
-	    cout<<"The contrib here is "<<contribs[j][k]<<endl;
-#endif
-	    probsum[j]=sumlogs(probsum[j],contribs[j][k]);
-	  }
-#ifdef DEBUG_2_2
-	  cout<<"Probsum is "<<probsum[j]<<endl;
-#endif
-	  //cout<<"Probsum is "<<probsum[j]<<endl;
-	}				
-      }
-      ll=0;
-      for(int k=0;k<ncentroids;k++){
-	for(int j=0;j<ninds*m->ploidy;j++){
-	  if(thislocus[j]>=0)
-	    ll+=pis[k]*exp(contribs[j][k]-probsum[j])*(contribs[j][k]);
-	}
-      }
-      bic=-2*ll+2*ncentroids*log(ninds*m->ploidy);
-#ifdef DEBUG_2
-      cout<<"Updated centroids and delta vals\n";
-      for(int l=0;l<ncentroids;l++)
-	cout<<centroidset[l]<<" ";
-      cout<<endl;
-      for(int l=0;l<ncentroids;l++)
-	cout<<deltaset[l]<<" ";
-      cout<<endl;
-      cout<<"Found bic to be "<<bic<<" and ll to be "<<ll<<endl;
-#endif
-      if(bic<bestbic){
-	bestbic=bic;
-	bestncentroids=ncentroids;
-	delete[] bestcentroids;
-	bestcentroids=new int[ncentroids];
-	for(int l=0;l<ncentroids;l++)
-	  bestcentroids[l]=centroidset[l];
-      }
-      for(int j=0;j<ninds*m->ploidy;j++)
-	delete[] contribs[j];
-      delete[] contribs;
-      delete[] probsum;
-      delete[] centroidset;
-      delete[] deltaset;
-      delete[] pis;
-    }
-#ifdef DEBUG_2
-    cout<<"Best no of centroids is "<<bestncentroids<<endl;
-#endif
+    bestncentroids=allelecount;
     m->numcentroids[i]=bestncentroids;
     for(int p=0;p<bestncentroids;p++){
       m->centroids[i][p]=bestcentroids[p];
       for(int k=0;k<m->npops;k++)
 	m->allelefreq[i][k][p]=log(zeroonerand());
-      //				m->allelefreq[i][k][p]=-1*log(bestncentroids);
     }
     for(int k=0;k<m->npops;k++){
       double logsum=-100;
