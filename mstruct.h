@@ -35,7 +35,6 @@ struct satellite{
   int* numcentroids;
   double** loggamma;
   double**** logrho;
-  double**** logxi;
   double** theta;
 };
 
@@ -49,8 +48,8 @@ double log1p(double);
 
 model* initialise_model(int*** data,int nloci,int npops,int ploidy,int ninds);
 void putinitialvalues(model* m,int*** data,int ninds);
-void infermodel(model* m,int*** data,int ininds,double**** varc,double**** varz,double** vartheta);
-void updatemodel(model* m,int*** data,int ninds,double**** varc,double**** varz,double** vartheta);
+void infermodel(model* m,int*** data,int ininds,double**** varz,double** vartheta);
+void updatemodel(model* m,int*** data,int ninds,double**** varz,double** vartheta);
 double computelogf(int x, int mu);
 void updateparams(model* m,satellite* info);
 void learnmodel(string filename,int npops);

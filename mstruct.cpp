@@ -40,68 +40,6 @@ double sigmoid(double x){
   return 1/(1+exp(-1*x));
 }
 
-int* runkm(int k,int* d,int npts){
-  double** dmat=new double*[npts];
-  int* bestcentroid=new int[npts]; //stores best centroid
-  for(int i=0;i<npts;i++)
-    dmat[i]=new double[k];
-  double* centroids=new double[k];
-  double max=-100000,min=1000000;
-  for(int i=0;i<npts;i++){
-    if(d[i]>max)
-      max=d[i];
-    if(d[i]<min)
-      min=d[i];
-  }
-  for(int j=0;j<k;j++)
-    centroids[j]=min+(max-min)*(j+1)/k;
-  //centroids now initialized
-  double mindist;
-  int count=0;
-  double* assgnpts=new double[k];
-  while(count++<100){
-    for(int i=0;i<npts;i++){
-      mindist=1000000;
-      for(int j=0;j<k;j++){
-	dmat[i][j]=abs(d[i]-centroids[j]);
-	if(dmat[i][j]<mindist){
-	  mindist=dmat[i][j];
-	  bestcentroid[i]=j;
-	}
-      }
-    }
-    for(int j=0;j<k;j++){
-      assgnpts[j]=0;
-      centroids[j]=0;
-    }
-    for(int i=0;i<npts;i++){
-      if(d[i]<0)
-	continue;
-      centroids[bestcentroid[i]]+=d[i];
-      assgnpts[bestcentroid[i]]++;
-    }
-    for(int j=0;j<k;j++){
-      if(assgnpts[j]!=0)
-	centroids[j]/=assgnpts[j];
-      else{
-	centroids[j]=-1;
-	while(centroids[j]<0)
-	  centroids[j]=d[rand()%npts];
-      }
-    }
-  }
-  int* centroidsint=new int[k];
-  for(int j=0;j<k;j++)
-    centroidsint[j]=(int)(centroids[j]);
-  //clean up
-  delete[] assgnpts;
-  delete[] bestcentroid;
-  for(int i=0;i<npts;i++)
-    delete[] dmat[i];
-  delete[] dmat;
-  return centroidsint;
-}
-
 int signum(int x){
   if(x==0)
     return 0;
@@ -139,10 +77,10 @@ void putinitialvalues(model* m,int*** data,int ninds){
     }
     bestncentroids=allelecount;
     m->numcentroids[i]=bestncentroids;
-    for(int p=0;p<bestncentroids;p++){
-      m->centroids[i][p]=bestcentroids[p];
+    for(int pt=0;pt<bestncentroids;pt++){
+      m->centroids[i][pt]=(m->uniqalleles[i].find(pt))->first;
       for(int k=0;k<m->npops;k++)
-	m->allelefreq[i][k][p]=log(zeroonerand());
+	m->allelefreq[i][k][pt]=log(zeroonerand());
     }
     for(int k=0;k<m->npops;k++){
       double logsum=-100;
@@ -240,19 +178,6 @@ void printsatellite(satellite* info, string s){
     }
   }
   ofile.close();
-  string s5=s+".xis";
-  ofile.open(s5.c_str());
-  for(int i=0;i<info->ninds;i++){
-      for(int j=0;j<info->nloci;j++){
-	for(int l=0;l<info->numcentroids[j];l++){
-    		for(int p=0;p<info->ploidy;p++){
-	  		ofile<<info->logxi[i][j][l][p]<<" ";
-	}
-	ofile<<endl;
-      }
-    }
-  }
-  ofile.close();
 }
 
 void dumpsatellite(satellite* info,string sin){
@@ -283,16 +208,14 @@ satellite* init_from_model(model* m,int numinds,int*** data){
   for(int i=0;i<m->nloci;i++){
     info->numcentroids[i]=m->numcentroids[i];
   }
-  //Initialize log-gamma, log-rho and log-xi
+  //Initialize log-gamma, log-rho 
   info->theta=new double*[numinds];
   info->loggamma=new double*[numinds];
   info->logrho=new double***[numinds];
-  info->logxi=new double***[numinds];
   for(int i=0;i<numinds;i++){
     info->theta[i]=new double[info->npops];
     info->loggamma[i]=new double[info->npops];
     info->logrho[i]=new double**[info->nloci];
-    info->logxi[i]=new double**[info->nloci];
     double thetasum=0;
     for(int j=0;j<info->npops;j++){
       //			info->loggamma[i][j]=m->alpha[j]+info->nloci/info->npops;
@@ -306,7 +229,6 @@ satellite* init_from_model(model* m,int numinds,int*** data){
     }
     for(int j=0;j<info->nloci;j++){
       info->logrho[i][j]=new double*[m->npops];
-      info->logxi[i][j]=new double*[m->numcentroids[j]];
       for(int k=0;k<info->npops;k++){
 	info->logrho[i][j][k]=new double[info->ploidy];
 	for(int p=0;p<info->ploidy;p++){
@@ -320,25 +242,6 @@ satellite* init_from_model(model* m,int numinds,int*** data){
 	}
 	for(int k=0;k<info->npops;k++){
 	  info->logrho[i][j][k][p]-=logsum;
-	}
-      }
-      for(int l=0;l<info->numcentroids[j];l++){
-	info->logxi[i][j][l]=new double[info->ploidy];
-	for(int p=0;p<info->ploidy;p++){
-	  if(data[i][j][p]>=0)
-	    //info->logxi[i][j][l][p]=-1*log(1+abs(data[i][j][p]-m->centroids[j][l]));
-	    info->logxi[i][j][l][p]=log(zeroonerand());
-	}
-      }
-      for(int p=0;p<m->ploidy;p++){
-	double logsum=-100;
-	if(data[i][j][p]<0)
-	  continue;
-	for(int l=0;l<m->numcentroids[j];l++){
-	  logsum=sumlogs(logsum,info->logxi[i][j][l][p]);
-	}
-	for(int l=0;l<m->numcentroids[j];l++){
-	  info->logxi[i][j][l][p]-=logsum;
 	}
       }
     }
@@ -380,17 +283,11 @@ void clearsatellite(satellite* info){
 	delete[] info->logrho[i][j][k];
       }		
       delete[] info->logrho[i][j];
-      for(int l=0;l<info->numcentroids[j];l++){
-	delete[] info->logxi[i][j][l];
-      }
-      delete[] info->logxi[i][j];
     }
-    delete[] info->logxi[i];
     delete[] info->logrho[i];
     delete[] info->loggamma[i];
     delete[] info->theta[i];
   }
-  delete[] info->logxi;
   delete[] info->logrho;
   delete[] info->loggamma;
   delete[] info->theta;
@@ -409,16 +306,14 @@ satellite* copysatellite(satellite* oldinfo){
   for(int i=0;i<oldinfo->nloci;i++){
     info->numcentroids[i]=oldinfo->numcentroids[i];
   }
-  //copy log-gamma, log-rho and log-xi
+  //copy log-gamma, log-rho 
   info->theta=new double*[oldinfo->ninds];
   info->loggamma=new double*[oldinfo->ninds];
   info->logrho=new double***[oldinfo->ninds];
-  info->logxi=new double***[oldinfo->ninds];
   for(int i=0;i<oldinfo->ninds;i++){
     info->theta[i]=new double[info->npops];
     info->loggamma[i]=new double[info->npops];
     info->logrho[i]=new double**[info->nloci];
-    info->logxi[i]=new double**[info->nloci];
     //double thetasum=0;
     for(int j=0;j<info->npops;j++){
       info->loggamma[i][j]=oldinfo->loggamma[i][j];
@@ -426,7 +321,6 @@ satellite* copysatellite(satellite* oldinfo){
     }
     for(int j=0;j<info->nloci;j++){
       info->logrho[i][j]=new double*[oldinfo->npops];
-      info->logxi[i][j]=new double*[oldinfo->numcentroids[j]];
       for(int k=0;k<info->npops;k++){
 	info->logrho[i][j][k]=new double[info->ploidy];
 	for(int p=0;p<info->ploidy;p++){
@@ -442,25 +336,6 @@ satellite* copysatellite(satellite* oldinfo){
 	  info->logrho[i][j][k][p]-=logsum;
 	}
 	}*/
-      for(int l=0;l<info->numcentroids[j];l++){
-	info->logxi[i][j][l]=new double[info->ploidy];
-	for(int p=0;p<info->ploidy;p++){
-	  //if(data[i][j][p]>=0)
-	    //info->logxi[i][j][l][p]=-1*log(1+abs(data[i][j][p]-oldinfo->centroids[j][l]));
-	    info->logxi[i][j][l][p]=oldinfo->logxi[i][j][l][p];
-	}
-      }
-      /*for(int p=0;p<oldinfo->ploidy;p++){
-	double logsum=-100;
-	if(data[i][j][p]<0)
-	  continue;
-	for(int l=0;l<oldinfo->numcentroids[j];l++){
-	  logsum=sumlogs(logsum,info->logxi[i][j][l][p]);
-	}
-	for(int l=0;l<oldinfo->numcentroids[j];l++){
-	  info->logxi[i][j][l][p]-=logsum;
-	}
-	}*/
     }
   }
   return info;
@@ -472,42 +347,7 @@ satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
   cout<<"Performing inference\n";
   satellite* currinfo=copysatellite(oldinfo); 
   int itercount;
-  /*double***** logfmatrix=new double****[numinds];
-    for(int i=0;i<numinds;i++){
-    logfmatrix[i]=new double***[m->nloci];
-    for(int j=0;j<m->nloci;j++){
-    logfmatrix[i][j]=new double**[m->npops];
-    for(int k=0;k<m->npops;k++){
-    logfmatrix[i][j][k]=new double*[m->numcentroids[j]];
-    for(int l=0;l<m->numcentroids[j];l++){
-    logfmatrix[i][j][k][l]=new double[m->ploidy];
-    for(int p=0;p<m->ploidy;p++){
-    logfmatrix[i][j][k][l][p]=computelogf(data[i][j][p],m->centroids[j][l],m->mutationrate[j][k]);
-    if(isnan(logfmatrix[i][j][k][l][p])){
-    cout<<"Problem computing logf "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<p<<endl;
-    }
-    }
-    }
-    }
-    }
-    }*/
   map<int,int>::iterator it;
-  double**** logfmatrix=new double***[m->nloci];
-  for(int i=0;i<m->nloci;i++){
-    logfmatrix[i]=new double**[m->npops];
-    for(int j=0;j<m->npops;j++){
-      logfmatrix[i][j]=new double*[m->numcentroids[i]];
-      for(int k=0;k<m->numcentroids[i];k++){
-	logfmatrix[i][j][k]=new double[m->uniqalleles[i].size()];
-	for(it=m->uniqalleles[i].begin();it!=m->uniqalleles[i].end();it++){
-	  logfmatrix[i][j][k][(*it).second]=computelogf((*it).first,m->centroids[i][k],m->mutationrate[i][j]);
-	}
-      }
-    }
-  }
-#ifdef DEBUG_0
-  cout<<"Computed logf matrix\n";
-#endif
   double gammasum,logsum;
   double* oldgamma=new double[m->npops];
   for(int i=0;i<numinds;i++){
@@ -517,7 +357,6 @@ satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
       oldgamma[k]=1;
     while(itercount++<=10 && maxdiff(oldgamma,currinfo->loggamma[i],m->npops)>1e-2){
       //			update rho
-			
       for(int k=0;k<m->npops;k++)
 	oldgamma[k]=currinfo->loggamma[i][k];
 #ifdef DEBUG_0
@@ -537,10 +376,8 @@ satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
 	    if(isnan(currinfo->logrho[i][j][k][p])){
 	      cout<<"problem computing log rho zero up "<<i<<" "<<j<<" "<<k<<" "<<p<<endl;
 	    }
-	    for(int l=0;l<m->numcentroids[j];l++){
-	      if(data[i][j][p]>=0)
-		currinfo->logrho[i][j][k][p]+=exp(currinfo->logxi[i][j][l][p])*(m->allelefreq[j][k][l]+logfmatrix[j][k][l][m->uniqalleles[j][data[i][j][p]]]);
-	    }
+	    if(data[i][j][p]>=0)
+		    currinfo->logrho[i][j][k][p]+=m->allelefreq[j][k][data[i][j][p]];
 	    if(isnan(currinfo->logrho[i][j][k][p])){
 	      cout<<"problem computing log rho first up "<<i<<" "<<j<<" "<<k<<" "<<p<<endl;
 	    }
@@ -561,38 +398,6 @@ satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
 	    if(isnan(currinfo->logrho[i][j][k][p])){
 	      cout<<"problem computing log rho "<<i<<" "<<j<<" "<<k<<" "<<p<<endl;
 	    }
-	  }
-	}
-      }
-#ifdef DEBUG_0
-      cout<<"Start xi update\n";
-#endif
-      //			update xi
-      for(int j=0;j<m->nloci;j++){
-	for(int l=0;l<m->numcentroids[j];l++){
-	  for(int p=0;p<m->ploidy;p++){
-	    currinfo->logxi[i][j][l][p]=0;
-	    for(int k=0;k<m->npops;k++){
-	      if(data[i][j][p]>=0)
-		currinfo->logxi[i][j][l][p]+=exp(currinfo->logrho[i][j][k][p])*(m->allelefreq[j][k][l]+logfmatrix[j][k][l][m->uniqalleles[j][data[i][j][p]]]);
-	    }
-	    if(isnan(currinfo->logxi[i][j][l][p])){
-	      cout<<"problem computing log xi first up"<<i<<" "<<j<<" "<<l<<" "<<p<<endl;
-	    }
-	  }
-	}
-      }
-      //			normalize
-      for(int j=0;j<m->nloci;j++){
-	for(int p=0;p<m->ploidy;p++){
-	  logsum=-1000;
-	  if(data[i][j][p]<0)
-	    continue;
-	  for(int l=0;l<m->numcentroids[j];l++){
-	    logsum=sumlogs(logsum,currinfo->logxi[i][j][l][p]);
-	  }
-	  for(int l=0;l<m->numcentroids[j];l++){
-	    currinfo->logxi[i][j][l][p]-=logsum;
 	  }
 	}
       }
@@ -629,32 +434,6 @@ satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
     }
 #endif
   }
-  /*for(int i=0;i<numinds;i++){
-    for(int j=0;j<m->nloci;j++){
-    for(int k=0;k<m->npops;k++){
-    for(int l=0;l<m->numcentroids[j];l++){
-    delete[] logfmatrix[i][j][k][l];
-    }
-    delete[] logfmatrix[i][j][k];
-    }
-    delete[] logfmatrix[i][j];
-    }
-    delete[] logfmatrix[i];
-    }
-    delete[] logfmatrix;*/
-
-  for(int j=0;j<m->nloci;j++){
-    for(int k=0;k<m->npops;k++){
-      for(int l=0;l<m->numcentroids[j];l++){
-	delete[] logfmatrix[j][k][l];
-	//cout<<"This delete failed for j= "<<j<<" and k="<<k<<" and l="<<l<<endl;;
-      }
-      delete[] logfmatrix[j][k];
-    }
-    delete[] logfmatrix[j];
-
-  }
-  delete[] logfmatrix;
   delete[] oldgamma;
   cout<<"Finished inference \n";
   return currinfo;
@@ -720,37 +499,12 @@ double computelikelihood(model* m,satellite* info,int*** data){
     }
     //		cout<<"Computed a rho term\n";
     for(int j=0;j<m->nloci;j++){
-      for(int l=0;l<m->numcentroids[j];l++){
-	for(int p=0;p<m->ploidy;p++){
-	if(data[i][j][p]>=0)
-	  llkhd-=info->logxi[i][j][l][p]*exp(info->logxi[i][j][l][p]);
-	}
-      }
-    }
-    if(isnan(llkhd)){
-      cout<<"Lkhd nan at xi term computation\n";
-      while(1){}
-    }
-    //		cout<<"Computed a xi term\n";
-    for(int j=0;j<m->nloci;j++){
       //			cout<<"Num centroids for this locus is "<<m->numcentroids[j]<<endl;
       for(int k=0;k<m->npops;k++){
-	for(int l=0;l<m->numcentroids[j];l++){
 	  for(int p=0;p<m->ploidy;p++){
-	    //						cout<<"Call with x="<<data[i][j][p]<<",mu="<<m->centroids[j][l]<<",del="<<m->mutationrate[j][k]<<endl;
-	    //						cout<<"Begin Computing a temp value "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<p<<endl;
-	    //						cout<<"Afreq is "<<m->allelefreq[j][l][p]<<endl;
-	    //						cout<<"Rho val is \n";
-	    //						cout<<info->logrho[i][j][k][p]<<" ";
-	    //						cout<<"Xi val is \n";
-	    //						cout<<info->logxi[i][j][l][p]<<" ";
 	    if(data[i][j][p]>=0){
-	      temp=m->allelefreq[j][k][l]+computelogf(data[i][j][p],m->centroids[j][l],m->mutationrate[j][k]);
-	      //						cout<<temp<<endl;
-	      //						cout<<"Computed a temp value "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<p<<endl;
-	      llkhd+=exp(info->logrho[i][j][k][p]+info->logxi[i][j][l][p])*temp;
+	      llkhd+=exp(info->logrho[i][j][k][p])*m->allelefreq[j][k][data[i][j][p]];
 	    }
-	  }
 	}
       }
     }
@@ -794,15 +548,6 @@ void printmodel(model* m,string s){
     ofile<<endl;
   }
   ofile.close();
-  string s3=s+".deltas";
-  ofile.open(s3.c_str());
-  for(int i=0;i<m->nloci; i++) {
-    for(int j=0;j<m->npops;j++){
-      ofile<<sigmoid(m->mutationrate[i][j])<<" ";
-    }
-    ofile<<endl;
-  }
-  ofile.close();
   string s4=s+".alphas";
   ofile.open(s4.c_str());
   for(int j=0;j<m->npops;j++){
@@ -825,59 +570,29 @@ void printmodel(model* m,string s){
 void updateparams(model* m,satellite* info,int*** data){
   //	update beta matrix
   double logsum,temp;
+  for(int j=0;j<m->nloci;j++)
+    for(int k=0;k<m->npops;k++)
+      for(int l=0;l<m->numcentroids[j];l++)
+	m->allelefreq[j][k][l]=-1000;
+  for(int i=0;i<info->ninds;i++){
+  	for(int j=0;j<m->nloci;j++){
+	  for(int p=0;p<m->ploidy;p++){
+		  if(data[i][j][p]>=0){
+    			for(int k=0;k<m->npops;k++)
+			  m->allelefreq[j][k][data[i][j][p]]=sumlogs(m->allelefreq[j][k][data[i][j][p]],info->logrho[i][j][k][p]);
+		  }
+	  }
+	}
+  }
   for(int j=0;j<m->nloci;j++){
     for(int k=0;k<m->npops;k++){
       logsum=-1000;
       for(int l=0;l<m->numcentroids[j];l++){
-	m->allelefreq[j][k][l]=-1000;
-	for(int i=0;i<info->ninds;i++){
-	  for(int p=0;p<m->ploidy;p++){
-	    if(data[i][j][p]>=0){
-	      temp=info->logrho[i][j][k][p]+info->logxi[i][j][l][p];
-	      m->allelefreq[j][k][l]=sumlogs(m->allelefreq[j][k][l],temp);
-	    }
-	  }
-	}
-	//m->allelefreq[j][k][l]=sumlogs(m->allelefreq[j][k][l],log(0.1*info->ninds/(m->npops*m->numcentroids[j])));
 	logsum=sumlogs(logsum,m->allelefreq[j][k][l]);
       }
       for(int l=0;l<m->numcentroids[j];l++){
 	m->allelefreq[j][k][l]-=logsum;
       }
-    }
-  }
-  //	update delta matrix
-  double num,den;
-  for(int j=0;j<m->nloci;j++){
-    for(int k=0;k<m->npops;k++){
-      num=0;
-      den=0;
-      for(int i=0;i<info->ninds;i++){
-	for(int l=0;l<m->numcentroids[j];l++){
-	  for(int p=0;p<m->ploidy;p++){
-	    if(data[i][j][p]>=0){
-	      num+=(exp(info->logrho[i][j][k][p]+info->logxi[i][j][l][p])*abs(data[i][j][p]-m->centroids[j][l]));
-	      den+=(exp(info->logrho[i][j][k][p]+info->logxi[i][j][l][p])*(2+abs(data[i][j][p]-m->centroids[j][l])));
-	    }
-		if(isnan(num) || isnan(den)){
-			cout<<"Delta isnan: "<<j<<" "<<k<<" "<<num<<" "<<den<<" "<<info->logrho[i][j][k][p]<<" "<<info->logxi[i][j][l][p]<<endl;
-		}
-	  }
-	}
-      }
-      //cout<<"Num is "<<num<<" and den is "<<den<<" and frac is "<<num/den<<endl;
-      num+=(0.2*pseudostrength*info->ninds/(m->npops*m->numcentroids[j]));
-      den+=(pseudostrength*info->ninds/(m->npops*m->numcentroids[j]));
-      //num+=(2*info->ninds);
-      //den+=(10*info->ninds);
-      //cout<<"Smoothed num is "<<num<<" and den is "<<den<<" and frac is "<<num/den<<endl;
-	double truedelta=num/den;
-	if(truedelta<1e-4)
-		cout<<"Small delta "<<truedelta<<" "<<num<<" "<<den<<endl;
-	if(truedelta>1-1e-4)
-		cout<<"Large delta "<<num<<" "<<den<<endl;
-      m->mutationrate[j][k]=logit(truedelta);
-	//cout<<"Mutation rates and sigmoid are "<<m->mutationrate[j][k]<<" and "<<sigmoid(m->mutationrate[j][k])<<endl;
     }
   }
   //	update alpha vector
@@ -1035,10 +750,10 @@ void learnmodel(string filename,int npops){
 void readglobals(char* filename){
   FILE* f=fopen(filename,"r");
   float pt1;
-  fscanf(f,"pseudostrength=%f\n", &pt1);
+  //fscanf(f,"pseudostrength=%f\n", &pt1);
   fclose(f);
-  pseudostrength=pt1;
-  cout<<"Pseudocount strength is "<<pseudostrength<<endl;
+  //pseudostrength=pt1;
+  //cout<<"Pseudocount strength is "<<pseudostrength<<endl;
 }
 
 int main(int argc,char** argv){
@@ -1052,7 +767,7 @@ int main(int argc,char** argv){
   string temp(argv[2]);
   OUTDIR=temp;
   cout<<"Outdir is "<<OUTDIR<<endl;
-  readglobals(argv[5]);
+  //readglobals(argv[5]);
   learnmodel(datafile,atoi(argv[3]));
   return 0;
 }
