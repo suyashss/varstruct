@@ -41,7 +41,8 @@ struct satellite{
 const int MAX_CENTROIDS=20;
 const int MAX_ITER=100;
 const double THRESH=1e-5;
-string OUTDIR;
+string OUTDIR,DATAFILE;
+int SEED=1,NPOPS,NUMINDS,NUMLOCI,PLOIDY;
 
 //data is ninds*nloci*ploidy
 double log1p(double);
