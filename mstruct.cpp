@@ -795,7 +795,6 @@ void readopts(int len,char* arr[]){
 				cout<<"-n <number of individuals>\n";
 				cout<<"-m <number of loci>\n";
 				cout<<"-p <ploidy>\n";
-				cout<<"-g <other-settings-file>\n";
 				cout<<"You can provide a random seed (optional) with \"-r <integer seed>\" \n";
 				exit(0);				
 			case 'd':
