@@ -660,12 +660,9 @@ datamatrix* readdata(string filename){
   cout<<"Filename is "<<filename<<endl;
   ifile.open(filename.c_str());
   datamatrix* d=new datamatrix();
-  ifile>>temp; d->ninds=temp;
-  cout<<"No of individuals="<<d->ninds<<endl;
-  ifile>>temp; d->nloci=temp;
-  cout<<"No of loci="<<d->nloci<<endl;
-  ifile>>temp; d->ploidy=temp;
-  cout<<"ploidy of individuals="<<d->ploidy<<endl;
+  d->ninds=NUMINDS;
+  d->nloci=NUMLOCI;
+  d->ploidy=PLOIDY;
   d->data=new int**[d->ninds];
   for(int i=0;i<d->ninds;i++){
     d->data[i]=new int*[d->nloci];
@@ -756,18 +753,97 @@ void readglobals(char* filename){
   //cout<<"Pseudocount strength is "<<pseudostrength<<endl;
 }
 
+void valuegiven(int count,int len,char* arr[]){
+	if(count+1==len){
+		cout<<"No value provided for switch "<<arr[count]<<endl;
+		exit(1);
+	}
+	else if(arr[count+1][0]=='-'){
+		cout<<"No value provided for switch "<<arr[count]<<endl;
+		exit(1);
+	}
+}
+
+void verifyoption(int option,string message,string optswitch){
+	if(option==-1){
+		cout << "Must provide "<<message<<" with switch "<<optswitch<<endl;
+		cout << "For help, use the switch \" -h\"\n";
+		exit(1);
+	}		
+}
+
+void readopts(int len,char* arr[]){
+	int count=1,len1;
+	string temp;
+	int dgiven=-1,ngiven=-1,ogiven=-1,pgiven=-1,rgiven=-1,ggiven=-1,kgiven=-1,mgiven=-1;
+	while(count!=len){
+		temp=string(arr[count]);
+		len1=temp.size();
+		if(len1!=2){
+			cout<<"Invalid switch "<<arr[count]<<endl;
+			exit(1);
+		}
+		if(arr[count][1]!='h')
+			valuegiven(count,len,arr);
+		switch (arr[count][1]) {
+			case 'h':
+				//help option
+				cout<<"Usage: mStruct requires the following parameters in any order:\n";
+				cout<<"-d <datafile>\n";
+				cout<<"-o <output-directory>\n";
+				cout<<"-k <number of populations>\n";
+				cout<<"-n <number of individuals>\n";
+				cout<<"-m <number of loci>\n";
+				cout<<"-p <ploidy>\n";
+				cout<<"You can provide a random seed (optional) with \"-r <integer seed>\" \n";
+				exit(0);				
+			case 'd':
+				// Data file
+				DATAFILE=string(arr[count+1]); dgiven=1;
+				break;
+			case 'o':
+				//Output directory
+				OUTDIR=string(arr[count+1]); ogiven=1;
+				break;
+			case 'k':
+				// No. of pops
+				NPOPS=atoi(arr[count+1]); kgiven=1;
+				break;
+			case 'n':
+				// No. of individuals
+				NUMINDS=atoi(arr[count+1]); ngiven=1;
+				break;
+			case 'm':
+				// No. of loci
+				NUMLOCI=atoi(arr[count+1]); mgiven=1;
+				break;
+			case 'r':
+				// Random seed
+				SEED=atoi(arr[count+1]); rgiven=1;
+				break;
+			case 'p':
+				// Ploidy
+				PLOIDY=atoi(arr[count+1]); pgiven=1;
+				break;
+			default:
+				cout<<"Unknown switch "<<arr[count]<<endl;
+				exit(1);
+		}
+		count+=2;
+	}	
+	verifyoption(dgiven,"Datafile","-d");
+	verifyoption(ngiven,"Number of individuals","-n");
+	verifyoption(mgiven,"Number of loci","-m");
+	verifyoption(pgiven,"Ploidy","-p");
+	verifyoption(kgiven,"Number of populations","-k");
+	verifyoption(ogiven,"Output directory","-o");
+	if(rgiven==-1)
+		cout<<"No seed provided, using default value: "<<SEED<<endl;
+}
+
 int main(int argc,char** argv){
-  if(argc<6){
-    cout<<"usage: ./mstruct <data-file> <output dir> <number of pops> <random seed> <other-params-file>\n";
-    return 0;
-  }
-  cout<<"Seed is "<<atoi(argv[4])<<endl;
-  srand(1+10*atoi(argv[4]));
-  string datafile(argv[1]);
-  string temp(argv[2]);
-  OUTDIR=temp;
-  cout<<"Outdir is "<<OUTDIR<<endl;
-  //readglobals(argv[5]);
-  learnmodel(datafile,atoi(argv[3]));
+  readopts(argc,argv);
+  srand(SEED);
+  learnmodel(DATAFILE,NPOPS);
   return 0;
 }
