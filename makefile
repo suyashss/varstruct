@@ -1,5 +1,5 @@
-all: mstruct.cpp mstruct.h
-	g++ -o mstruct mstruct.cpp
+all: varstruct.cpp varstruct.h
+	g++ -o varstruct varstruct.cpp
 
 clean:
-	rm -f mstruct mstruct.o
+	rm -f varstruct varstruct.o
