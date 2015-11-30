@@ -652,8 +652,7 @@ void updateparams(model* m,satellite* info,int*** data){
 }
 
 datamatrix* readdata(string filename){
-  //	 Format- A line having ninds, nloci, ploidy
-  //	Then, for each ind, there are <ploidy> lines, each line containing <nloci> integers
+  //	 Format- For each ind, there are <ploidy> lines, each line containing <nloci> integers
   //	 Therefore the file has <ninds>*<ploidy> lines
   ifstream ifile;
   int temp;
@@ -672,6 +671,9 @@ datamatrix* readdata(string filename){
   }
   for(int i=0;i<d->ninds;i++){
     for(int p=0;p<d->ploidy;p++){
+	for(int j=0;j<6;j++){
+		ifile>>temp; // Read and discard first 6 fields from each line
+	}
       for(int j=0;j<d->nloci;j++){
 	ifile>>temp;
 	//cout<<"Reading "<<i<<" "<<p<<" "<<j<<":"<<temp<<endl;
