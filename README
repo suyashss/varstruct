@@ -6,11 +6,11 @@ Usage instructions:
 
 usage: ./varstruct -d <data-file> -o <output dir> -k <number of pops> -r <random seed> -n <number of individuals> -m <number of loci> -p <ploidy>
 
-<data-file> is a file containing the genotype data. Its format is as follows:
+<data-file> is a file containing the genotype data in Structure format. Its format is as follows:
 ===========================================================================
-There are P lines per individual, each line containing M entries separated by spaces. Missing genotypes are represented using the value -9.
+There are P lines per individual, each line containing 6+M entries separated by spaces. The first six columns are ignored. Missing genotypes are represented using the value -9.
 ===========================================================================
-The data file has N*P lines in total.
+The data file has N*P lines in total, each with 6+M columns
 
 <output dir> is the directory in which the output files are stored. This directory must be present for the output to be saved.
 
