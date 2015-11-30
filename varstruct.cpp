@@ -344,7 +344,7 @@ satellite* copysatellite(satellite* oldinfo){
 satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
   //	Given a model and the data, return the inferred variational parameters
   //	satellite* oldinfo=init_from_model(m,numinds);//Might be unnecessary
-  cout<<"Performing inference\n";
+  //cout<<"Performing inference\n";
   satellite* currinfo=copysatellite(oldinfo); 
   int itercount;
   map<int,int>::iterator it;
@@ -435,7 +435,7 @@ satellite* infer(model* m,int*** data,int numinds,satellite* oldinfo){
 #endif
   }
   delete[] oldgamma;
-  cout<<"Finished inference \n";
+  //cout<<"Finished inference \n";
   return currinfo;
 }
 
@@ -656,6 +656,7 @@ datamatrix* readdata(string filename){
   //	 Therefore the file has <ninds>*<ploidy> lines
   ifstream ifile;
   int temp;
+  string tempstr="tempstring";
   cout<<"Filename is "<<filename<<endl;
   ifile.open(filename.c_str());
   datamatrix* d=new datamatrix();
@@ -672,7 +673,7 @@ datamatrix* readdata(string filename){
   for(int i=0;i<d->ninds;i++){
     for(int p=0;p<d->ploidy;p++){
 	for(int j=0;j<6;j++){
-		ifile>>temp; // Read and discard first 6 fields from each line
+		ifile>>tempstr; // Read and discard first 6 fields from each line
 	}
       for(int j=0;j<d->nloci;j++){
 	ifile>>temp;
@@ -725,13 +726,13 @@ void learnmodel(string filename,int npops){
     info=infer(currmodel,d->data,d->ninds,oldinfo);
     clearsatellite(oldinfo);
     currlkhd=computelikelihood(currmodel,info,d->data);
-    cout<<"After inference, lkhd = "<<currlkhd<<endl;
+    //cout<<"After inference, lkhd = "<<currlkhd<<endl;
     updateparams(currmodel,info,d->data);
     currlkhd=computelikelihood(currmodel,info,d->data);
-    cout<<"After parameter update, lkhd = "<<currlkhd<<endl;
+    //cout<<"After parameter update, lkhd = "<<currlkhd<<endl;
     oldinfo=info;
     //clearsatellite(info);
-    if(iter%3==1){
+    if(iter%3==-1){
       sprintf(buffer,"%d",iter);
       iterstring.assign(buffer);
       cout<<"Iterstring is "<<iterstring<<endl;
@@ -739,7 +740,7 @@ void learnmodel(string filename,int npops){
       dumpmodel(currmodel,iterstring);
       dumpsatellite(info,iterstring);
     }
-    cout<<"Finished iteration\n";
+    //cout<<"Finished iteration\n";
   }
   dumpmodel(currmodel,"final");
   dumpsatellite(info,"final");
