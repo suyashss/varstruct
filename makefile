@@ -3,3 +3,6 @@ all: varstruct.cpp varstruct.h
 
 clean:
 	rm -f varstruct varstruct.o
+
+test:
+	python tests/cram-0.4/cram.py -q tests/tiny.t
