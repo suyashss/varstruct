@@ -147,7 +147,7 @@ void printsatellite(satellite* info, string s){
     ofile<<info->numcentroids[i]<<endl;
   }
   ofile.close();
-  string s2=s+".gamma";
+  /*string s2=s+".gamma";
   ofile.open(s2.c_str());	
   for(int i=0;i<info->ninds;i++){
     for(int k=0;k<info->npops;k++){
@@ -155,7 +155,7 @@ void printsatellite(satellite* info, string s){
     }
     ofile<<endl;
   }
-  ofile.close();
+  ofile.close();*/
   string s3=s+".theta";
   ofile.open(s3.c_str());	
   for(int i=0;i<info->ninds;i++){
@@ -165,7 +165,7 @@ void printsatellite(satellite* info, string s){
     ofile<<endl;
   }
   ofile.close();
-  string s4=s+".rhos";
+  /*string s4=s+".rhos";
   ofile.open(s4.c_str());
   for(int i=0;i<info->ninds;i++){
     for(int p=0;p<info->ploidy;p++){
@@ -177,7 +177,7 @@ void printsatellite(satellite* info, string s){
       }
     }
   }
-  ofile.close();
+  ofile.close();*/
 }
 
 void dumpsatellite(satellite* info,string sin){
