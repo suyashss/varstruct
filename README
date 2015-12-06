@@ -1,4 +1,4 @@
-varStruct is a variational reimplementation of the Structure algorithm by Pritchard et al. 
+varStruct is a variational reimplementation of the Structure algorithm by Pritchard et al. varStruct handles multi-allelic loci.
 
 You can compile varStruct from source by using the provided makefile, by executing the command "make"
 
