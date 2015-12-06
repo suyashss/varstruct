@@ -1,4 +1,4 @@
-all: varstruct.cpp varstruct.h
+varstruct: varstruct.cpp varstruct.h
 	g++ -o varstruct varstruct.cpp
 
 clean:
