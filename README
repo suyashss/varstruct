@@ -21,13 +21,9 @@ The data file has N*P lines in total, each with 6+M columns
 Output:
 Every few iterations, the program outputs the value of the inferred variational parameters as well as the model parameters (as described in the paper). They are stored in the files with the following suffixes:
 
-.gamma - The variational \gamma parameters. The parameters for each individual are stored on a single line.
-
 .theta - The inferred \theta parameters.
 
 .beta - The ancestral allele frequency matrix.
-
-.rhos - The variational \rho parameters.
 
 .centroids - The allele centroids \mu.
 
