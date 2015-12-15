@@ -19,9 +19,9 @@ The data file has N*P lines in total, each with 6+M columns
 <random seed> is the OPTIONAL random seed that is used to randomly initialize the inference.
 
 Output:
-Every few iterations, the program outputs the value of the inferred variational parameters as well as the model parameters (as described in the paper). They are stored in the files with the following suffixes:
+The program outputs the value of the inferred ancestry proportions as well as the model parameters. They are stored in the files with the following suffixes:
 
-.theta - The inferred \theta parameters.
+.theta - The inferred ancestry proportions, one line per individual.
 
 .beta - The ancestral allele frequency matrix.
 
