@@ -8,7 +8,7 @@ usage: ./varstruct -d <data-file> -o <output dir> -k <number of pops> -r <random
 
 <data-file> is a file containing the genotype data in Structure format. Its format is as follows:
 ===========================================================================
-There are P lines per individual, each line containing 6+M entries separated by spaces. The first six columns are ignored. Missing genotypes are represented using the value -9.
+Let N be the number of individuals, M be the number of loci and P be the ploidy. Then there are P lines per individual, each line containing 6+M entries separated by spaces. The first six columns are ignored. Missing genotypes are represented using the value -9.
 ===========================================================================
 The data file has N*P lines in total, each with 6+M columns
 
