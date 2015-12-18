@@ -14,7 +14,7 @@ using namespace std;
 int PRINTCT=0,SATPRINTCT=0;
 #define DEBUG 1
 //#define DEBUG_0 1
-int MAXALLELES=50;
+int MAXALLELES=150;
 
 struct datamatrix{
   int*** data;
@@ -38,7 +38,7 @@ struct satellite{
   double** theta;
 };
 
-const int MAX_CENTROIDS=20;
+const int MAX_CENTROIDS=MAXALLELES;
 const int MAX_ITER=100;
 const double THRESH=1e-5;
 string OUTDIR,DATAFILE;
