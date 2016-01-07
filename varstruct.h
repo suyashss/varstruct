@@ -41,7 +41,7 @@ struct satellite{
 const int MAX_CENTROIDS=MAXALLELES;
 const int MAX_ITER=100;
 const double THRESH=1e-5;
-string OUTDIR,DATAFILE;
+string OUTPREFIX,DATAFILE;
 int SEED=1,NPOPS,NUMINDS,NUMLOCI,PLOIDY;
 
 //data is ninds*nloci*ploidy

@@ -185,7 +185,7 @@ void dumpsatellite(satellite* info,string sin){
     sprintf(buffer,"satellite_dump.%s",sin);
     string s(buffer);*/
   string s=sin;
-  s=OUTDIR+"/"+s;
+  s=OUTPREFIX+"."+s;
   printsatellite(info,s);	
 }
 
@@ -523,7 +523,7 @@ void dumpmodel(model* m,string sin){
     sprintf(buffer,"model_dump.%s",sin);
     string s(buffer);*/
   string s=sin;
-  s=OUTDIR+"/"+s;
+  s=OUTPREFIX+"."+s;
   printmodel(m,s);
 }
 
@@ -778,7 +778,7 @@ void verifyoption(int option,string message,string optswitch){
 void usage(){
 	cout<<"Usage: varStruct requires the following parameters in any order:\n";
 	cout<<"-d <datafile>\n";
-	cout<<"-o <output-directory>\n";
+	cout<<"-o <output-prefix>\n";
 	cout<<"-k <number of populations>\n";
 	cout<<"-n <number of individuals>\n";
 	cout<<"-m <number of loci>\n";
@@ -813,8 +813,8 @@ void readopts(int len,char* arr[]){
 				DATAFILE=string(arr[count+1]); dgiven=1;
 				break;
 			case 'o':
-				//Output directory
-				OUTDIR=string(arr[count+1]); ogiven=1;
+				//Output prefix
+				OUTPREFIX=string(arr[count+1]); ogiven=1;
 				break;
 			case 'k':
 				// No. of pops
