@@ -1,10 +1,9 @@
-bin/varstruct: varstruct.cpp varstruct.h
+bin/varstruct: src/varstruct.cpp src/varstruct.h
 	mkdir -p bin
-	g++ -o varstruct varstruct.cpp
-	mv varstruct bin
+	g++ -o bin/varstruct src/varstruct.cpp
 
 clean:
-	rm -f bin/varstruct varstruct.o
+	rm -f bin/varstruct
 
 test:
 	python tests/cram-0.4/cram.py -q tests/tiny.t
