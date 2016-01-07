@@ -4,7 +4,7 @@ You can compile varStruct from source by using the provided makefile, by executi
 
 Usage instructions:
 
-usage: ./varstruct -d <data-file> -o <output dir> -k <number of pops> -r <random seed> -n <number of individuals> -m <number of loci> -p <ploidy>
+usage: ./varstruct -d <data-file> -o <output prefix> -k <number of pops> -r <random seed> -n <number of individuals> -m <number of loci> -p <ploidy>
 
 <data-file> is a file containing the genotype data in Structure format. Its format is as follows:
 ===========================================================================
@@ -12,7 +12,7 @@ Let N be the number of individuals, M be the number of loci and P be the ploidy.
 ===========================================================================
 The data file has N*P lines in total, each with 6+M columns
 
-<output dir> is the directory in which the output files are stored. This directory must be present for the output to be saved.
+<output prefix> is the prefix for output file. The output files will have names <output prefix>.final.* 
 
 <number of pops> is the number of ancestral populations that you want to infer from the data.
 
