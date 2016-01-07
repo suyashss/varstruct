@@ -719,7 +719,7 @@ void learnmodel(string filename,int npops){
   int iter=0;
   string iterstring="";
   char buffer[10];
-  while( (currlkhd-oldlkhd)/abs(oldlkhd)>1e-4 && iter<150){
+  while( (currlkhd-oldlkhd)>1e-4 && iter<1000){
     iter++;
     cout<<"Start iteration "<<iter<<" with llkhd= "<<currlkhd<<endl;
     oldlkhd=currlkhd;
